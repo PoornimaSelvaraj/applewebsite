@@ -616,40 +616,72 @@ body{
 @media(max-width:576px){
 
     .hero{
-        height:570px;
+        height:900px;
+        background-repeat:no-repeat;
+        background-position:center bottom;
+        background-size:auto 72%;
     }
 
     .hero-content{
-        padding-top:38px;
+        padding-top:48px;
     }
 
     .hero h1{
-        font-size:34px;
-        letter-spacing:-1px;
+        font-size:42px;
+        letter-spacing:-1.5px;
+        margin-bottom:10px;
     }
 
     .hero h2{
-        font-size:21px;
+        font-size:27px;
+        margin-bottom:18px;
     }
 
     .hero p{
-        font-size:14px;
+        font-size:16px;
+        line-height:1.5;
+        padding:0 20px;
     }
 
     .iphone-pro{
-        background-size:auto 570px;
+        height:900px;
+        background-color:#000;
+        background-size:auto 68%;
+        background-position:center bottom 20px;
     }
 
     .iphone-duo{
-        background-size:auto 570px;
+        height:850px;
+        background-color:#f5f5f7;
+        background-size:auto 72%;
+        background-position:center bottom;
     }
 
     .watch-series{
-        background-size:auto 570px;
+        height:850px;
+        background-color:#000;
+        background-size:auto 72%;
+        background-position:center bottom;
+    }
+
+    .iphone-pro .hero-content,
+    .iphone-duo .hero-content{
+        padding-top:55px;
+    }
+
+    .iphone-pro .btn-apple,
+    .iphone-duo .btn-apple{
+        padding:10px 22px;
+        font-size:16px;
+        border-radius:24px;
+    }
+
+    .watch-series .hero-content{
+        padding-top:45px;
     }
 
     .product{
-        height:500px;
+        height:560px;
     }
 
     .product h2{
@@ -705,7 +737,119 @@ body{
 .watch-series .hero-content>p{position:absolute;left:0;bottom:92px;width:100%;margin:0;font-size:17px}
 .watch-series .watch-series-buttons{position:absolute;left:50%;bottom:42px;transform:translateX(-50%);width:max-content}
 .watch-series .watch-series-buttons .btn-apple{margin:3px}
-@media(max-width:991px){.apple-mega-menu{display:none}.watch-series .hero-content>p{bottom:86px}.watch-series .watch-series-buttons{bottom:35px}}
+@media(max-width:991px){
+    .apple-mega-menu{
+        position:fixed;
+        inset:0;
+        width:100%;
+        height:100dvh;
+        max-height:none;
+        overflow-y:auto;
+        background:#161617;
+        backdrop-filter:none;
+        -webkit-backdrop-filter:none;
+        transform:none;
+        opacity:1;
+        visibility:visible;
+        display:none;
+        z-index:10000;
+    }
+
+    .apple-mega-menu.show{
+        display:block;
+        opacity:1;
+        visibility:visible;
+        transform:none;
+    }
+
+    .mobile-mega-header{
+        height:64px;
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        padding:0 20px;
+        border-bottom:1px solid #3a3a3c;
+    }
+
+    .mobile-mega-back,
+    .mobile-mega-close{
+        border:0;
+        background:transparent;
+        color:#f5f5f7;
+        width:42px;
+        height:42px;
+        padding:0;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+    }
+
+    .mobile-mega-back{
+        font-size:26px;
+    }
+
+    .mobile-mega-close{
+        font-size:22px;
+    }
+
+    .mega-container{
+        width:100%;
+        max-width:none;
+        padding:28px 24px 40px;
+    }
+
+    .mega-content{
+        grid-template-columns:1fr;
+        gap:28px;
+    }
+
+    .mega-content>div{
+        width:100%;
+    }
+
+    .mega-label{
+        display:none;
+    }
+
+    .mega-title{
+        font-size:24px;
+        line-height:1.45;
+    }
+
+    .mega-column-title{
+        font-size:13px;
+        margin-bottom:10px;
+    }
+
+    .mega-links a{
+        font-size:15px;
+        line-height:2;
+    }
+
+    .navbar.mobile-mega-open{
+        z-index:999;
+    }
+
+    body.mobile-mega-active{
+        overflow:hidden;
+    }
+
+    .watch-series .hero-content>p{
+        bottom:105px;
+        padding:0 25px;
+        font-size:14px;
+    }
+
+    .watch-series .watch-series-buttons{
+        bottom:50px;
+    }
+}
+
+@media(min-width:992px){
+    .mobile-mega-header{
+        display:none;
+    }
+}
 
 </style>
 </head>
@@ -749,6 +893,10 @@ body{
     </div>
 
     <div class="apple-mega-menu" id="appleMegaMenu">
+        <div class="mobile-mega-header">
+            <button type="button" class="mobile-mega-back" id="mobileMegaBack" aria-label="Back"><i class="bi bi-chevron-left"></i></button>
+            <button type="button" class="mobile-mega-close" id="mobileMegaClose" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+        </div>
         <div class="mega-container" id="megaContent"></div>
     </div>
 </nav>
@@ -1053,27 +1201,101 @@ support:`<div class="mega-content"><div><div class="mega-label">Explore Support<
 const megaItems=document.querySelectorAll(".mega-item");
 const megaMenu=document.getElementById("appleMegaMenu");
 const megaContent=document.getElementById("megaContent");
+const mobileMegaBack=document.getElementById("mobileMegaBack");
+const mobileMegaClose=document.getElementById("mobileMegaClose");
+const appleMenu=document.getElementById("appleMenu");
 let megaTimer;
+let activeMenu="";
+
+function openMegaMenu(item){
+    const menu=item.dataset.menu;
+    if(!menuData[menu])return;
+    clearTimeout(megaTimer);
+    megaContent.innerHTML=menuData[menu];
+    megaMenu.classList.add("show");
+    activeMenu=menu;
+
+    if(window.innerWidth<=991){
+        appleMenu.classList.remove("show");
+        document.querySelector(".navbar")?.classList.add("mobile-mega-open");
+        document.body.classList.add("mobile-mega-active");
+    }
+}
+
+function closeMegaMenu(){
+    clearTimeout(megaTimer);
+    megaMenu.classList.remove("show");
+    activeMenu="";
+    document.querySelector(".navbar")?.classList.remove("mobile-mega-open");
+    document.body.classList.remove("mobile-mega-active");
+}
 
 megaItems.forEach(item=>{
+    const link=item.querySelector(".nav-link");
+
     item.addEventListener("mouseenter",()=>{
-        clearTimeout(megaTimer);
-        megaContent.innerHTML=menuData[item.dataset.menu];
-        megaMenu.classList.add("show");
+        if(window.innerWidth>991){
+            openMegaMenu(item);
+        }
     });
+
     item.addEventListener("mouseleave",event=>{
-        if(!megaMenu.contains(event.relatedTarget)){
-            megaTimer=setTimeout(()=>megaMenu.classList.remove("show"),120);
+        if(window.innerWidth>991 && !megaMenu.contains(event.relatedTarget)){
+            megaTimer=setTimeout(closeMegaMenu,180);
+        }
+    });
+
+    link.addEventListener("click",event=>{
+        if(window.innerWidth<=991){
+            event.preventDefault();
+            event.stopPropagation();
+            const menu=item.dataset.menu;
+            if(activeMenu===menu && megaMenu.classList.contains("show")){
+                closeMegaMenu();
+            }else{
+                openMegaMenu(item);
+            }
         }
     });
 });
 
 megaMenu.addEventListener("mouseenter",()=>{
-    clearTimeout(megaTimer);
+    if(window.innerWidth>991){
+        clearTimeout(megaTimer);
+    }
 });
 
 megaMenu.addEventListener("mouseleave",()=>{
-    megaTimer=setTimeout(()=>megaMenu.classList.remove("show"),120);
+    if(window.innerWidth>991){
+        megaTimer=setTimeout(closeMegaMenu,180);
+    }
+});
+
+mobileMegaBack.addEventListener("click",event=>{
+    event.preventDefault();
+    event.stopPropagation();
+    closeMegaMenu();
+    if(window.innerWidth<=991){
+        appleMenu.classList.add("show");
+    }
+});
+
+mobileMegaClose.addEventListener("click",event=>{
+    event.preventDefault();
+    event.stopPropagation();
+    closeMegaMenu();
+});
+
+document.addEventListener("click",event=>{
+    if(window.innerWidth<=991 && megaMenu.classList.contains("show") && !megaMenu.contains(event.target) && !event.target.closest(".mega-item")){
+        closeMegaMenu();
+    }
+});
+
+window.addEventListener("resize",()=>{
+    if(window.innerWidth>991){
+        closeMegaMenu();
+    }
 });
 
 
